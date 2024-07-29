@@ -8,7 +8,7 @@ from vllm.model_executor.layers.linear import LinearBase, LinearMethodBase
 from vllm.model_executor.layers.quantization.base_config import (
     QuantizationConfig)
 from vllm.model_executor.utils import set_weight_attrs
-
+import datetime
 
 class AWQConfig(QuantizationConfig):
     """Config class for AWQ.
@@ -165,10 +165,14 @@ class AWQLinearMethod(LinearMethodBase):
         # num_tokens >= threshold
         FP16_MATMUL_HEURISTIC_CONDITION = x.shape[:-1].numel() >= 256
 
+        # print("in the awq function")
         if FP16_MATMUL_HEURISTIC_CONDITION:
             out = ops.awq_dequantize(qweight, scales, qzeros, 0, 0, 0)
             out = torch.matmul(reshaped_x, out)
         else:
+            # print("saving data to the file")
+            # saved_vals = {'reshaped_x': reshaped_x, 'qweight': qweight, 'scales': scales, 'qzeros': qzeros, 'pack_factor': pack_factor}
+            # torch.save(saved_vals, f=f"/mnt/workdisk/nihal/projects/public/vllm/benchmarks/testing_data/{datetime.datetime.now()}.pt")
             out = ops.awq_gemm(reshaped_x, qweight, scales, qzeros,
                                pack_factor)
         if bias is not None:
